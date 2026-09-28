@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>高難易度籤桶</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:16px;background:linear-gradient(135deg,#171522,#29213f);color:#fff;font-family:system-ui,"Noto Sans TC",sans-serif}.app{max-width:720px;margin:auto}h1{text-align:center}.card,.menu{background:#ffffff12;border:1px solid #ffffff20;border-radius:18px;padding:16px;margin:12px 0}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}select,button{width:100%;padding:12px;border:0;border-radius:10px;font-size:16px}button{cursor:pointer}#draw{margin-top:14px;font-size:20px;font-weight:800}.checks{display:flex;gap:8px;flex-wrap:wrap}.checks label{background:#ffffff12;padding:9px;border-radius:9px}.checks input{width:18px;height:18px}.item{padding:12px 0;border-bottom:1px solid #ffffff18}.menuBtn{position:fixed;right:14px;top:14px;width:auto;background:#ffffff22;color:#fff;font-size:22px;z-index:5}.side{position:fixed;right:0;top:0;width:min(430px,92vw);height:100%;overflow:auto;background:#211d31;padding:18px;z-index:10;transform:translateX(100%);transition:.2s}.side.open{transform:none}.back{display:none;position:fixed;inset:0;background:#0008;z-index:9}.back.open{display:block}.song{display:flex;gap:8px;align-items:center;padding:6px 0}.song input{width:18px;height:18px}.lv{font-size:18px;font-weight:800;margin-top:16px}.actions{display:flex;gap:8px}.actions button{background:#ffffff18;color:#fff}@media(max-width:520px){.row{grid-template-columns:1fr}}
+</style></head><body>
+<button class="menuBtn" id="mb">☰</button><div class="back" id="back"></div><aside class="side" id="side">
+<h2>🎵 歌曲設定</h2><p>取消勾選的歌曲就不會被抽到。</p><div class="actions"><button id="all">全部選取</button><button id="reset">回覆預設</button></div><div id="list"></div></aside>
+<div class="app"><h1>🎲 高難易度籤桶</h1><div class="card">
+<div class="row"><label>抽取數量<select id="n"></select></label><label>最低難易度<select id="lo"></select></label><label>最高難易度<select id="hi"></select></label></div>
+<p>譜面類型（可複選）</p><div class="checks"><label><input class="ct" type="checkbox" value="Expert" checked> Expert</label><label><input class="ct" type="checkbox" value="Master" checked> Master</label><label><input class="ct" type="checkbox" value="Append" checked> Append</label></div>
+<label style="display:block;margin-top:12px"><input id="nr" type="checkbox" checked> 同一次抽籤不允許重複</label>
+<button id="draw">🎲 抽籤！</button><button id="copy" style="margin-top:8px">📋 複製結果</button></div>
+<div class="card"><div id="result">按下「抽籤！」開始。</div></div></div>
+<script>
+const songs = [
+[32,"怪獣になりたい","Expert"],[32,"ビターチョコデコレーション","Master"],[32,"Brand New Day","Master"],[32,"バグ","Master"],[32,"CIRCUS PANIC!!!","Master"],[32,"チルドレンレコード","Master"],[32,"超最終鬼畜妹フランドール・Ｓ","Master"],[32,"厨病激発ボーイ","Master"],[32,"ドクター＝ファンクビート","Master"],[32,"フューチャー・イヴ","Master"],[32,"フィクサー","Master"],[32,"folern","Master"],[32,"拝啓ドッペルゲンガー","Master"],[32,"ヒバナ -Reloaded-","Master"],[32,"IMAWANOKIWA","Master"],[32,"インビジブル","Master"],[32,"MANHATTAN","Master"],[32,"熱異常","Master"],[32,"脳漿炸裂ガール","Master"],[32,"おどりゃんせ","Master"],[32,"プロトディスコ","Master"],[32,"星界ちゃんと可不ちゃんのおつかい合騒曲","Master"],[32,"Sage","Master"],[32,"千本桜","Master"],[32,"セツナトリップ","Master"],[32,"シルバーコレクター","Master"],[32,"snooze","Master"],[32,"テオ","Master"],[32,"トンデモワンダーズ","Master"],[32,"WE ARE PICO PICO HAMMERS!!!!","Master"],[32,"88☆彡","Append"],[32,"アクセラレイト","Append"],[32,"地球最後の告白を","Append"],[32,"Help me, ERINNNNNN!!","Append"],[32,"生きる","Append"],[32,"Journey","Append"],[32,"NEO","Append"],[32,"RAD DOGS","Append"],[32,"スーサイドパレヱド","Append"],[32,"とうほう☆ワンダーランド","Append"],
+[33,"ぼくらの16bit戦争","Master"],[33,"超ナイト・オブ・ナイツ","Master"],[33,"ゴーストルール","Master"],[33,"初音天地開闢神話","Master"],[33,"嬢王","Master"],[33,"ロストワンの号哭","Master"],[33,"MarbleBlue.","Master"],[33,"プラネットヒーロー","Master"],[33,"SAN値直葬","Master"],[33,"生命性シンドロウム","Master"],[33,"TREASURE GARDEN","Master"],[33,"チルノのパーフェクトさんすう学園","Append"],[33,"ドーナツホール 2024","Append"],[33,"Iなんです","Append"],[33,"カゲロウデイズ","Append"],[33,"キラー","Append"],[33,"混沌ブギ","Append"],[33,"のだ","Append"],[33,"ONESELF","Append"],[33,"snooze","Append"],[33,"トンデモワンダーズ","Append"],[33,"アンヘル","Append"],
+[34,"初音ミクの激唱","Master"],[34,"ÅMARA(大未来電脳)","Master"],[34,"おぎゃりないざー","Master"],[34,"ダイジョウブですか？","Master"],[34,"メモリア","Master"],[34,"ネクラチューンサーカス","Master"],[34,"0.0000034","Master"],[34,"初音狂奏曲第01番「彗惺」","Master"],[34,"こわれちゃった！！","Master"],[34,"ヒバナ -Reloaded-","Append"],[34,"チルドレンレコード","Append"],[34,"東京テディベア","Append"],[34,"プロトディスコ","Append"],[34,"フュージョン","Append"],
+[35,"初音ミクの消失","Master"],[35,"六兆年と一夜物語","Master"],[35,"マシンガンポエムドール","Master"],[35,"エンドマークに希望と涙を添えて","Master"],[35,"Don't Fight The Music","Master"],[35,"腐れ外道とチョコレゐト","Master"],[35,"怪獣になりたい","Master"],[35,"Brand New Day","Append"],[35,"六兆年と一夜物語","Append"],[35,"folern","Append"],[35,"超最終鬼畜妹フランドール・Ｓ","Append"],[35,"IMAWANOKIWA","Append"],[35,"CHAOS","Append"],
+[36,"the EmpErroR","Master"],[36,"Sage","Append"],[36,"嬢王","Append"],[36,"生命性シンドロウム","Append"],[36,"超ナイト・オブ・ナイツ","Append"],[36,"SAN値直葬","Append"],[36,"ANiMA","Append"],
+[37,"What's up? Pop!","Master"],[37,"ヤミナベ!!!!","Master"],[37,"人生","Master"],[37,"MarbleBlue.","Append"],[37,"おぎゃりないざー","Append"],[37,"ダイジョウブですか？","Append"],[37,"メモリア","Append"],[37,"ネクラチューンサーカス","Append"],[37,"0.0000034","Append"],[37,"初音狂奏曲第01番「彗惺」","Append"],[37,"こわれちゃった!!","Append"],[38,"怪獣になりたい","Append"]
+];
+
+const $ = id => document.getElementById(id);
+const amountEl = $("n"), minEl = $("lo"), maxEl = $("hi");
+const listEl = $("list"), resultEl = $("result");
+const menuEl = $("side"), backEl = $("back");
+
+for (let i = 1; i <= 10; i++) amountEl.add(new Option(i, i));
+for (let i = 32; i <= 38; i++) {
+  minEl.add(new Option(i, i));
+  maxEl.add(new Option(i, i));
+}
+amountEl.value = 1;
+minEl.value = 32;
+maxEl.value = 38;
+
+const songKey = s => s[0] + "|" + s[1] + "|" + s[2];
+const enabled = new Set(songs.map(songKey));
+
+function renderSongList() {
+  listEl.innerHTML = "";
+
+  for (let lv = 32; lv <= 38; lv++) {
+    const heading = document.createElement("div");
+    heading.className = "lv";
+    heading.textContent = "Lv." + lv;
+    listEl.appendChild(heading);
+
+    songs.filter(s => s[0] === lv).forEach(song => {
+      const label = document.createElement("label");
+      label.className = "song";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = enabled.has(songKey(song));
+
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) enabled.add(songKey(song));
+        else enabled.delete(songKey(song));
+      });
+
+      const name = document.createElement("span");
+      name.textContent = song[1];
+
+      const chart = document.createElement("small");
+      chart.style.marginLeft = "auto";
+      chart.style.opacity = ".6";
+      chart.textContent = song[2];
+
+      label.append(checkbox, name, chart);
+      listEl.appendChild(label);
+    });
+  }
+}
+
+function openMenu() {
+  menuEl.classList.add("open");
+  backEl.classList.add("open");
+}
+
+function closeMenu() {
+  menuEl.classList.remove("open");
+  backEl.classList.remove("open");
+}
+
+function shuffleSample(array, count) {
+  const copy = array.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, count);
+}
+
+function drawSongs() {
+  const count = Number(amountEl.value);
+  const min = Number(minEl.value);
+  const max = Number(maxEl.value);
+
+  const selectedCharts = Array.from(
+    document.querySelectorAll(".ct:checked"),
+    checkbox => checkbox.value
+  );
+
+  if (min > max) {
+    resultEl.textContent = "⚠️ 最低難易度不能大於最高難易度。";
+    return;
+  }
+
+  if (selectedCharts.length === 0) {
+    resultEl.textContent = "⚠️ 至少選擇一種譜面難度。";
+    return;
+  }
+
+  const pool = songs.filter(song =>
+    song[0] >= min &&
+    song[0] <= max &&
+    selectedCharts.includes(song[2]) &&
+    enabled.has(songKey(song))
+  );
+
+  if (pool.length === 0) {
+    resultEl.textContent = "⚠️ 沒有符合目前設定的籤。";
+    return;
+  }
+
+  const noRepeat = $("nr").checked;
+
+  if (noRepeat && count > pool.length) {
+    resultEl.textContent =
+      `⚠️ 目前只有 ${pool.length} 個符合條件的籤，無法不重複抽 ${count} 首。`;
+    return;
+  }
+
+  const chosen = noRepeat
+    ? shuffleSample(pool, count)
+    : Array.from(
+        { length: count },
+        () => pool[Math.floor(Math.random() * pool.length)]
+      );
+
+  resultEl.innerHTML = chosen.map((song, index) => `
+    <div class="item">
+      <b>第 ${index + 1} 首</b><br>
+      難易度：${song[0]}<br>
+      曲名：${escapeHtml(song[1])}<br>
+      譜面難度：${song[2]}
+    </div>
+  `).join("");
+}
+
+function escapeHtml(text) {
+  return text.replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[char]));
+}
+
+$("draw").addEventListener("click", drawSongs);
+
+$("copy").addEventListener("click", async () => {
+  const text = resultEl.innerText;
+  if (!text) return;
+
+  try {
+    await navigator.clipboard.writeText(text);
+    $("copy").textContent = "✓ 已複製！";
+    setTimeout(() => $("copy").textContent = "📋 複製結果", 1200);
+  } catch {
+    alert("複製失敗，請手動選取結果。");
+  }
+});
+
+$("mb").addEventListener("click", openMenu);
+backEl.addEventListener("click", closeMenu);
+
+$("all").addEventListener("click", () => {
+  songs.forEach(song => enabled.add(songKey(song)));
+  renderSongList();
+});
+
+$("reset").addEventListener("click", () => {
+  songs.forEach(song => enabled.add(songKey(song)));
+  renderSongList();
+});
+
+renderSongList();
+</script></body></html>
